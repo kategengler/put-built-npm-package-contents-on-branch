@@ -55,10 +55,10 @@ runs:
         cd tmp/dist-action/package
         git config --global init.defaultBranch main
         git init
-        git config user.name ${{ inputs.commit-user }}
-        git config user.email ${{ inputs.commit-email }}
+        git config user.name "${{ inputs.commit-user }}"
+        git config user.email "${{ inputs.commit-email }}"
         git add .
-        git commit -m ${{ inputs.commit-message }}
+        git commit -m "${{ inputs.commit-message }}"
         git push --force "https://${{ github.actor }}:${{ inputs.token }}@github.com/${{ github.repository }}" main:${{ inputs.branch }}
       working-directory: ${{ inputs.working-directory }}
     - name: 'Cleanup'
