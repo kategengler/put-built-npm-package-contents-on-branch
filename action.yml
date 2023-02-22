@@ -1,0 +1,67 @@
+name: Publish Built package to a branch
+description: Build each commit and publish to a branch
+author: Katie Gengler
+inputs:
+  token:
+    description: 'A GitHub token with write access to the repository contents'
+    required: true
+  working-directory:
+    description: 'Directory in which to run the pack command'
+    required: false
+    default: './'
+  pack-command:
+    description: 'Command to generate the package tarball'
+    required: false
+    default: 'npm pack'
+  branch:
+    description: 'Branch name to push the contents to'
+    required: false
+    default: 'dist'
+  tmp-dir:
+    description: 'Empty directory in which to unpack the package tarball; will be created if it does not exist'
+    required: false
+    default: './tmp/dist-action'
+  commit-message:
+    description: 'Commit message to use when pushing to the branch'
+    required: false
+    default: 'Publish dist for ${{ github.sha }}'
+  commit-user:
+    description: 'Name of the user to use when committing to the branch'
+    required: false
+    default: 'github-actions[bot]'
+  commit-email:
+    description: 'Email of the user to use when committing to the branch'
+    required: false
+    default: 'github-actions[bot]@users.noreply.github.com'
+
+runs:
+  using: "composite"
+  steps:
+    - name: 'Pack'
+      shell: 'bash'
+      run: ${{ inputs.pack-command }}
+      working-directory: ${{ inputs.working-directory }}
+    - name: 'Make tmpdir'
+      shell: 'bash'
+      run: mkdir -p ${{ inputs.tmp-dir }}
+      working-directory: ${{ inputs.working-directory }}
+    - name: 'Unpack'
+      shell: 'bash'
+      run: tar -xvzf *.tgz -C ${{ inputs.tmp-dir }}
+      working-directory: ${{ inputs.working-directory }}
+    - name: 'Upload published package contents to branch'
+      shell: 'bash'
+      run: |
+        cd tmp/dist-action/package
+        git config --global init.defaultBranch main
+        git init
+        git config user.name ${{ inputs.commit-user }}
+        git config user.email ${{ inputs.commit-email }}
+        git add .
+        git commit -m ${{ inputs.commit-message }}
+        git push --force "https://${{ github.actor }}:${{ inputs.token }}@github.com/${{ github.repository }}" main:${{ inputs.branch }}
+      working-directory: ${{ inputs.working-directory }}
+    - name: 'Cleanup'
+      shell: 'bash'
+      run: rm -rf ${{ inputs.tmp-dir }}
+      working-directory: ${{ inputs.working-directory }}
