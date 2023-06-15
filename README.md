@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: npm run build # Add whatever you need to build your pacakage here
+      - run: npm run build # Add whatever you need to build your package here
       - uses: kategengler/put-built-npm-package-contents-on-branch@v1.0.0
         with:
           branch: ${{ github.head_ref || github.ref_name }}-dist
