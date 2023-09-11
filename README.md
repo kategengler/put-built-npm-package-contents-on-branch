@@ -79,3 +79,29 @@ the action is complete.
 ### `commit-email` (default: `github-actions[bot]@users.noreply.github.com`)
 
 **Description:** The email to use when pushing the built package to the branch.
+
+### `omit-scripts` (default: `prepack,postpack`)
+
+**Description:** Comma separated list of scripts to omit from `package.json`
+after packing, or "*" to omit everything.
+
+**Why is this needed?** Package managers differ in opinion on what scripts to
+run when installing dependencies from Git. Some package managers do nothing at
+all, and some choose to run `pack` command and the `prepack`/`postpack` scripts
+along with it.
+
+A common reason for using this workflow is to push the already-packed content
+to a dist branch in order to support package manages that does not run the
+`pack` script when installing a Git dependency.
+
+However, on package managers that runs the `pack` command, they may encounter
+issues when installing from the dist branch. For example, the Ember's v2 addons
+has `"prepack": "rollup --config"`, but since the rollup config file is omitted
+from the packed tarball, the command will fail.
+
+Therefore, by default, we omit the `prepack` and `postpack` scripts from the
+resulting `package.json` before pushing, in order to normalize this difference
+across package managers. Running these scripts should be entirely unnecessary
+when installing from the dist branch.
+
+You can opt-out of this behavior by setting `omit-scripts` to an empty string.

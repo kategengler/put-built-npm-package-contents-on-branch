@@ -33,6 +33,10 @@ inputs:
     description: 'Email of the user to use when committing to the branch'
     required: false
     default: 'github-actions[bot]@users.noreply.github.com'
+  omit-scripts:
+    description: 'Comma separated list of scripts to omit from package.json after packing, or "*" to omit everything'
+    required: false
+    default: 'prepack,postpack'
 
 runs:
   using: "composite"
@@ -48,6 +52,25 @@ runs:
     - name: 'Unpack'
       shell: 'bash'
       run: tar -xvzf *.tgz -C ${{ inputs.tmp-dir }}
+      working-directory: ${{ inputs.working-directory }}
+    - name: 'Omit Scripts'
+      shell: 'bash'
+      env:
+        OMIT_SCRIPTS: ${{ inputs.omit-scripts }}
+        OUTPUT_DIR: ${{ inputs.tmp-dir }}
+      run: |
+        OUTPUT_FILE="$OUTPUT_DIR/package/package.json"
+
+        if [[ "$OMIT_SCRIPTS" == "*" ]]; then
+          jq '. | del(.scripts)' package.json > "$OUTPUT_FILE"
+        elif [[ ! -z "$OMIT_SCRIPTS" ]]; then
+          JQ_COMMAND="."
+          IFS=',' read -ra SCRIPTS <<< "$OMIT_SCRIPTS"
+          for SCRIPT in "${SCRIPTS[@]}"; do
+            JQ_COMMAND="$JQ_COMMAND | del(.scripts.\"$SCRIPT\")"
+          done
+          jq "$JQ_COMMAND" package.json > "$OUTPUT_FILE"
+        fi
       working-directory: ${{ inputs.working-directory }}
     - name: 'Upload published package contents to branch'
       shell: 'bash'
