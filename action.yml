@@ -82,7 +82,8 @@ runs:
         git config user.email "${{ inputs.commit-email }}"
         git add .
         git commit -m "${{ inputs.commit-message }}"
-        git push --force "https://${{ github.actor }}:${{ inputs.token }}@github.com/${{ github.repository }}" main:${{ inputs.branch }}
+        REMOTE=$(echo "${{ github.server_url }}" | sed 's/\(https\?:\/\/\)\(.*\)/\1${{ github.actor }}:${{ inputs.token }}@\2/')
+        git push --force "$REMOTE/${{ github.repository }}" main:${{ inputs.branch }}
       working-directory: ${{ inputs.working-directory }}
     - name: 'Cleanup'
       shell: 'bash'
