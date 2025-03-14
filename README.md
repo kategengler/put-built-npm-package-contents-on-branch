@@ -25,6 +25,8 @@ jobs:
   push-dist:
     name: Push dist
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
       - run: npm run build # Add whatever you need to build your package here
